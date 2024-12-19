@@ -1,9 +1,6 @@
-from datetime import datetime
-from flask import render_template, request
+from flask import render_template, request, jsonify
 from run import app
-from wxcloudrun.dao import delete_counterbyid, query_counterbyid, insert_counter, update_counterbyid
-from wxcloudrun.model import Counters
-from wxcloudrun.response import make_succ_empty_response, make_succ_response, make_err_response
+from wxcloudrun.model import LogisticsInfo
 
 
 @app.route('/')
@@ -14,53 +11,27 @@ def index():
     return render_template('index.html')
 
 
-@app.route('/api/count', methods=['POST'])
-def count():
+@app.route('/api/query-logistics', methods=['POST'])
+def query_logistics():
     """
-    :return:计数结果/清除结果
+    查询物流信息
+    :return: 返回物流单号和快递公司名称
     """
-
-    # 获取请求体参数
+    # 获取请求参数
     params = request.get_json()
 
-    # 检查action参数
-    if 'action' not in params:
-        return make_err_response('缺少action参数')
+    # 检查手机号参数
+    if 'phone' not in params:
+        return jsonify({"error": "缺少手机号"}), 400
 
-    # 按照不同的action的值，进行不同的操作
-    action = params['action']
+    phone = params['phone']
 
-    # 执行自增操作
-    if action == 'inc':
-        counter = query_counterbyid(1)
-        if counter is None:
-            counter = Counters()
-            counter.id = 1
-            counter.count = 1
-            counter.created_at = datetime.now()
-            counter.updated_at = datetime.now()
-            insert_counter(counter)
-        else:
-            counter.id = 1
-            counter.count += 1
-            counter.updated_at = datetime.now()
-            update_counterbyid(counter)
-        return make_succ_response(counter.count)
-
-    # 执行清0操作
-    elif action == 'clear':
-        delete_counterbyid(1)
-        return make_succ_empty_response()
-
-    # action参数错误
+    # 查询物流信息
+    logistics = LogisticsInfo.query.filter_by(phone=phone).first()
+    if logistics:
+        return jsonify({
+            "tracking_number": logistics.tracking_number,
+            "courier_company": logistics.courier_company
+        })
     else:
-        return make_err_response('action参数错误')
-
-
-@app.route('/api/count', methods=['GET'])
-def get_count():
-    """
-    :return: 计数的值
-    """
-    counter = Counters.query.filter(Counters.id == 1).first()
-    return make_succ_response(0) if counter is None else make_succ_response(counter.count)
+        return jsonify({"error": "未找到物流信息"}), 404
