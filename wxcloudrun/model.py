@@ -1,15 +1,9 @@
-from datetime import datetime
-
 from wxcloudrun import db
 
+class LogisticsInfo(db.Model):
+    __tablename__ = 'logistics_info'
 
-# 计数表
-class Counters(db.Model):
-    # 设置结构体表格名称
-    __tablename__ = 'Counters'
-
-    # 设定结构体对应表格的字段
-    id = db.Column(db.Integer, primary_key=True)
-    count = db.Column(db.Integer, default=1)
-    created_at = db.Column('createdAt', db.TIMESTAMP, nullable=False, default=datetime.now())
-    updated_at = db.Column('updatedAt', db.TIMESTAMP, nullable=False, default=datetime.now())
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    phone = db.Column(db.String(20), nullable=False)
+    tracking_number = db.Column(db.String(50), nullable=False)
+    courier_company = db.Column(db.String(50), nullable=False)
